@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Consolidator v0 - Local</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input[type="password"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: "Monaco", "Courier New", monospace;
+            font-size: 12px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="password"] {
+            height: 45px;
+            margin-bottom: 15px;
+        }
+        
+        textarea {
+            height: 250px;
+            resize: none;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn-generate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-generate:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-generate:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-reset {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-reset:hover {
+            background: #e0e0e0;
+        }
+        
+        .status {
+            display: none;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .status.loading {
+            display: block;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #1976d2;
+        }
+        
+        .status.success {
+            display: block;
+            background: #e8f5e9;
+            color: #388e3c;
+            border-left: 4px solid #388e3c;
+        }
+        
+        .status.error {
+            display: block;
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(25, 118, 210, 0.3);
+            border-top-color: #1976d2;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .info {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Document Consolidator v0 - Local</h1>
+        <p class="subtitle">Hackathon 24hs - Ejecuta localmente con tu API key</p>
+        
+        <div class="info">
+            ⚠️ <strong>Requiere:</strong> API key de Anthropic. <a href="https://console.anthropic.com" target="_blank">Obtener aquí</a>
+        </div>
+        
+        <div class="section">
+            <label>🔑 API Key de Anthropic</label>
+            <input type="password" id="apiKey" placeholder="sk-ant-v0-..." />
+        </div>
+        
+        <div class="section">
+            <label>📥 Datos de entrada (mock_data.json)</label>
+            <textarea id="mockDataInput" placeholder="Pegá aquí tu mock_data.json...">{
+  "cliente": "Empresa ABC",
+  "proyecto": "Proyecto XYZ - Post-venta",
+  "emails": [
+    {
+      "id": "email_001",
+      "fecha": "2024-09-01",
+      "from": "contacto@empresa.com",
+      "nombre_from": "Juan García",
+      "asunto": "Consulta urgente - Implementación",
+      "body": "Hola, escribo para consultar sobre el estado de la implementación. Tenemos problemas en la integración con nuestro backend."
+    },
+    {
+      "id": "email_002",
+      "fecha": "2024-09-02",
+      "from": "gerente@empresa.com",
+      "nombre_from": "María López",
+      "asunto": "Re: Consulta urgente",
+      "body": "Gracias por contactar. Hemos identificado el problema. Esperamos resolverlo en 48 horas. ¿Podemos coordinar una llamada?"
+    }
+  ],
+  "whatsapp": [
+    {
+      "id": "wa_001",
+      "fecha": "2024-09-02T14:30:00",
+      "from": "Juan García",
+      "rol": "Gerente Técnico",
+      "mensaje": "¿Qué onda con la integración? El cliente está pidiendo news urgente"
+    }
+  ],
+  "instagram": [
+    {
+      "id": "ig_001",
+      "fecha": "2024-09-03",
+      "from": "cliente_ig_user",
+      "mensaje": "Vimos el update. Gracias por mantener informados. ¿Cuándo podemos testear?"
+    }
+  ],
+  "notas_foto": [
+    {
+      "id": "nota_001",
+      "fecha": "2024-09-03",
+      "quien": "Analista",
+      "contexto": "Requerimientos finales",
+      "transcripcion": "Cliente solicita: 1) Reporte diario, 2) Alertas SMS, 3) Backup automático"
+    }
+  ]
+}</textarea>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-generate" id="generateBtn">🚀 GENERAR DOCUMENTO</button>
+            <button class="btn-reset" id="resetBtn">↻ Limpiar</button>
+        </div>
+        
+        <div class="status" id="status"></div>
+    </div>
+    
+    <script>
+        const apiKeyInput = document.getElementById('apiKey');
+        const mockDataInput = document.getElementById('mockDataInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const statusDiv = document.getElementById('status');
+        
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        function showLoadingStatus(message) {
+            statusDiv.innerHTML = `<span class="spinner"></span>${message}`;
+            statusDiv.className = 'status loading';
+        }
+        
+        resetBtn.addEventListener('click', () => {
+            mockDataInput.value = '';
+            statusDiv.className = 'status';
+            statusDiv.textContent = '';
+            generateBtn.disabled = false;
+        });
+        
+        generateBtn.addEventListener('click', async () => {
+            try {
+                generateBtn.disabled = true;
+                const apiKey = apiKeyInput.value.trim();
+                
+                if (!apiKey) {
+                    showStatus('❌ Por favor ingresá tu API key', 'error');
+                    generateBtn.disabled = false;
+                    return;
+                }
+                
+                // 1. Validar JSON
+                showLoadingStatus('Validando datos...');
+                let mockData;
+                try {
+                    mockData = JSON.parse(mockDataInput.value);
+                } catch (e) {
+                    showStatus('❌ JSON inválido: ' + e.message, 'error');
+                    generateBtn.disabled = false;
+                    return;
+                }
+                
+                // 2. Llamar a Claude API
+                showLoadingStatus('Llamando a Claude API (esto toma ~30s)...');
+                
+                const prompt = `TAREA: Analiza datos de comunicaciones y extrae información estructurada.
+
+DATOS A ANALIZAR:
+${JSON.stringify(mockData, null, 2)}
+
+INSTRUCCIONES:
+1. Extrae TODAS las personas mencionadas: nombre completo, rol, email (si existe), teléfono (si existe)
+2. Crea TIMELINE cronológica: lista cada evento/comunicación importante con fecha, qué pasó, quién lo dijo
+3. Escribe RESUMEN: 2-3 párrafos resumiendo el contexto, el problema y la situación actual
+4. Define ESTADO_ACTUAL: una sola frase corta sobre cómo está ahora
+5. Lista PENDIENTES: qué tareas/decisiones quedan por hacer
+
+FORMATO DE RESPUESTA:
+Debes responder EXACTAMENTE así, sin nada más, sin markdown, solo JSON puro:
+
+{"personas":[{"nombre":"Juan García","rol":"Gerente Técnico","email":"juan@empresa.com","telefono":"+54911234567"}],"timeline":[{"fecha":"2024-09-01","evento":"Cliente reporta problema de integración","quien":"Juan García","tipo":"problema"}],"resumen":"El cliente ABC está implementando sistema XYZ...","estado_actual":"En resolución - esperando fix en 48h","pendientes":["Resolver error de integración"]}`;
+                
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey,
+                        'anthropic-version': '2023-06-01'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-3-5-sonnet-20241022',
+                        max_tokens: 2000,
+                        messages: [
+                            { role: 'user', content: prompt }
+                        ]
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    showStatus(`❌ Error de API: ${error.error?.message || 'Error desconocido'}`, 'error');
+                    generateBtn.disabled = false;
+                    return;
+                }
+                
+                const data = await response.json();
+                const resultText = data.content[0].text;
+                
+                // 3. Parsear respuesta
+                showLoadingStatus('Procesando respuesta de Claude...');
+                let datosConsolidados;
+                try {
+                    let jsonText = resultText.trim();
+                    if (jsonText.includes('```json')) {
+                        jsonText = jsonText.split('```json')[1].split('```')[0].trim();
+                    } else if (jsonText.includes('```')) {
+                        jsonText = jsonText.split('```')[1].split('```')[0].trim();
+                    }
+                    datosConsolidados = JSON.parse(jsonText);
+                } catch (e) {
+                    showStatus(`❌ Error al parsear JSON: ${resultText.substring(0, 200)}`, 'error');
+                    generateBtn.disabled = false;
+                    return;
+                }
+                
+                // 4. Generar documento HTML
+                showLoadingStatus('Generando documento...');
+                
+                let timelineHTML = '<table style="width:100%; border-collapse:collapse; margin:20px 0;">';
+                timelineHTML += '<tr style="background:#f0f0f0;"><th style="border:1px solid #ddd; padding:8px; text-align:left;">Fecha</th><th style="border:1px solid #ddd; padding:8px; text-align:left;">Evento</th><th style="border:1px solid #ddd; padding:8px; text-align:left;">Quién</th></tr>';
+                (datosConsolidados.timeline || []).forEach(e => {
+                    timelineHTML += `<tr><td style="border:1px solid #ddd; padding:8px;">${e.fecha || '-'}</td><td style="border:1px solid #ddd; padding:8px;">${e.evento || '-'}</td><td style="border:1px solid #ddd; padding:8px;">${e.quien || '-'}</td></tr>`;
+                });
+                timelineHTML += '</table>';
+                
+                let contactosHTML = '<table style="width:100%; border-collapse:collapse; margin:20px 0;">';
+                contactosHTML += '<tr style="background:#f0f0f0;"><th style="border:1px solid #ddd; padding:8px; text-align:left;">Nombre</th><th style="border:1px solid #ddd; padding:8px; text-align:left;">Rol</th><th style="border:1px solid #ddd; padding:8px; text-align:left;">Email</th></tr>';
+                (datosConsolidados.personas || []).forEach(p => {
+                    contactosHTML += `<tr><td style="border:1px solid #ddd; padding:8px;">${p.nombre || '-'}</td><td style="border:1px solid #ddd; padding:8px;">${p.rol || '-'}</td><td style="border:1px solid #ddd; padding:8px;">${p.email || '-'}</td></tr>`;
+                });
+                contactosHTML += '</table>';
+                
+                const docHTML = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Consolidacion</title>
+    <style>
+        body { font-family: Calibri, Arial, sans-serif; max-width: 900px; margin: 40px auto; line-height: 1.6; color: #333; }
+        h1 { font-size: 28px; text-align: center; margin-bottom: 10px; }
+        .subtitle { text-align: center; font-size: 14px; color: #666; margin-bottom: 30px; }
+        h2 { font-size: 16px; margin-top: 30px; margin-bottom: 10px; border-bottom: 2px solid #667eea; padding-bottom: 5px; }
+        h3 { font-size: 14px; margin-top: 15px; margin-bottom: 8px; }
+        p { margin: 10px 0; }
+        ul { margin-left: 20px; }
+        li { margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f0f0f0; font-weight: bold; }
+        .estado-box { background: #e3f2fd; padding: 15px; border-left: 4px solid #667eea; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <h1>${mockData.cliente || 'Cliente'}</h1>
+    <p class="subtitle">${mockData.proyecto || 'Proyecto'}</p>
+    <p class="subtitle">Generado: ${new Date().toLocaleDateString('es-ES')}</p>
+    
+    <h2>1. RESUMEN EJECUTIVO</h2>
+    <p>${datosConsolidados.resumen || 'N/A'}</p>
+    
+    <h2>2. ESTADO & PENDIENTES</h2>
+    <div class="estado-box">
+        <strong>Estado:</strong> ${datosConsolidados.estado_actual || 'N/A'}
+    </div>
+    
+    <h3>Pendientes:</h3>
+    <ul>
+        ${(datosConsolidados.pendientes || []).map(p => `<li>${p}</li>`).join('')}
+    </ul>
+    
+    <h2>3. TIMELINE</h2>
+    ${timelineHTML}
+    
+    <h2>4. CONTACTOS</h2>
+    ${contactosHTML}
+</body>
+</html>`;
+                
+                // 5. Descargar
+                showLoadingStatus('Descargando documento...');
+                const blob = new Blob([docHTML], { type: 'text/html; charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                const fecha = new Date().toISOString().split('T')[0];
+                link.href = url;
+                link.download = `consolidacion_${mockData.cliente.replace(/\s+/g, '_')}_${fecha}.html`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                showStatus('✅ Documento generado y descargado exitosamente', 'success');
+                generateBtn.disabled = false;
+                
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+                generateBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
